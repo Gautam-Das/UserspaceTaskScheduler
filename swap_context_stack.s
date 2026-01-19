@@ -10,10 +10,10 @@ swap_context_stack:
     pushq %r15
 
     # Save RSP AFTER pushes
-    movq %rsp, 8*1(%rdi)
+    movq %rsp, (%rdi)
 
     # Load target context
-    movq 8*1(%rsi), %rsp    # RSP
+    movq (%rsi), %rsp    # RSP
 
     # Restore registers FROM NEW STACK
     popq %r15

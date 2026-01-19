@@ -4,7 +4,7 @@
 #include <iostream>
 
 struct Context {
-    void *rip, *rsp;
+    void *rsp;
 };
 
 extern "C" {
@@ -20,8 +20,8 @@ Context c;
 
 void printContext(Context *context) {
 
-    printf("%p, %p,",
-           context->rip, context->rsp);
+    printf("%p",
+           context->rsp);
 }
 
 void foo() {

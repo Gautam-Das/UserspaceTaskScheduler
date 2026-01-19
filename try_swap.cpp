@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <cstring>
 #include <emmintrin.h>
 #include <iostream>
 
@@ -25,7 +26,8 @@ void printContext(Context *context) {
 
 void foo() {
     static int x = 0;
-    printf("hello world from foo\n");
+    std::cout << "hello world from foo\n"
+              << std::endl;
     if (x == 1)
         exit(0);
     x++;
@@ -53,8 +55,8 @@ auto printtwice() {
 
 auto add_dummy_registers(char *sp, size_t n_regs) {
     for (auto i{0}; i < n_regs; ++i) {
-        sp -= 1;
-        *sp = 0;
+        sp -= 8;
+        *reinterpret_cast<uint64_t *>(sp) = 0;
     }
     return sp;
 }
@@ -73,13 +75,19 @@ int main(void) {
     // allow 128 bytes for red zone
     sp -= 128;
 
+    // align stack
+    sp -= 8;
+
+    // push the rip to the top of the stack
+    sp -= 8;
+    *reinterpret_cast<uint64_t *>(sp) = reinterpret_cast<uint64_t>(foo);
+
     // push dummy values for 6 registers:
     // rbx, rbp, r12,r13,r14,r15
     sp = add_dummy_registers(sp, 6);
+    c.rsp = reinterpret_cast<void *>(sp);
 
     while (true) {
-        c.rip = reinterpret_cast<void *>(foo);
-        c.rsp = reinterpret_cast<void *>(sp);
         swap_context_stack(&main_context, &c);
         printf("returning from swap\n");
     }

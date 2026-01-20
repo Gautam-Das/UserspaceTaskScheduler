@@ -3,22 +3,55 @@
 #include <emmintrin.h>
 #include <iostream>
 
-struct Context {
+struct TCB {
+    enum class State {
+        READY = 0,
+        RUNNING = 1,
+        WAITING = 2,
+        DONE = 3
+    };
     void *rsp;
+    uint32_t state : 2;
+    uint32_t priority : 4;
+    uint32_t small_stack : 1;
+    uint32_t task_id : 25;
+
+    void set_state(State state) {
+        this->state = static_cast<int>(state);
+    }
+    void set_priority(char priority) {
+        this->priority = priority;
+    }
+    void set_small_stack_flag(bool small_stack) {
+        this->small_stack = small_stack;
+    }
+    void set_id(int task_id) {
+        this->task_id = task_id;
+    }
+
+    void set_all(State state, char priority, bool small_stack, int task_id) {
+        this->state = static_cast<int>(state);
+        this->priority = priority;
+        this->task_id = task_id;
+        this->small_stack = small_stack;
+    }
+
+    constexpr auto get_state() const { return this->state; }
+    constexpr auto get_priority() const { return this->priority; }
 };
 
 extern "C" {
-void swap_context(Context *cur_c, Context *new_c);
-void get_context(Context *c);
-void set_context(Context *c);
-void swap_context_stack(Context *cur_c, Context *new_c);
-void swap_context_stack_first(Context *cur_c, Context *new_c);
+void swap_context(TCB *cur_c, TCB *new_c);
+void get_context(TCB *c);
+void set_context(TCB *c);
+void swap_context_stack(TCB *cur_c, TCB *new_c);
+void swap_context_stack_first(TCB *cur_c, TCB *new_c);
 }
 
-Context main_context;
-Context c;
+TCB main_context;
+TCB c;
 
-void printContext(Context *context) {
+void printContext(TCB *context) {
 
     printf("%p",
            context->rsp);
@@ -42,7 +75,7 @@ auto bar() {
 
 auto printtwice() {
     volatile int x = 0;
-    Context c;
+    TCB c;
     get_context(&c);
 
     printf("hello world %d\n", x);
@@ -62,7 +95,7 @@ auto add_dummy_registers(char *sp, size_t n_regs) {
 }
 
 int main(void) {
-
+    std::cout << sizeof(TCB) << std::endl;
     // create stack for foo
     char data[4096];
 
@@ -75,7 +108,7 @@ int main(void) {
     // allow 128 bytes for red zone
     sp -= 128;
 
-    // align stack
+    // align stack because 7 things will be pushed that messes up the alignment
     sp -= 8;
 
     // push the rip to the top of the stack

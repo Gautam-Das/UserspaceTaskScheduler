@@ -1,15 +1,16 @@
-#ifndef TCB
-#define TCB
+#ifndef TCB_H
+#define TCB_H
 
 #include <cstdint>
 
 struct TCB {
     enum class State {
-        READY = 0,
-        RUNNING = 1,
-        WAITING = 2,
-        DONE = 3
+        DONE = 0,
+        READY = 1,
+        RUNNING = 2,
+        WAITING = 3,
     };
+
     void *rsp;
     uint32_t state : 2;
     uint32_t priority : 4;

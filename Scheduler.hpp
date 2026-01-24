@@ -65,7 +65,6 @@ public:
         task_tcb.set_all(TCB::State::READY, 1, false, 0);
 
         worker.add_task(task_tcb);
-        local_worker = &worker;
         worker.run();
     }
 };

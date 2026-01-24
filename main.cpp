@@ -88,7 +88,6 @@ int main(void) {
     c.set_all(TCB::State::READY, 1, false, 0);
 
     worker.add_task(c);
-    local_worker = &worker;
     worker.run();
 
     Scheduler<1> scheduler;

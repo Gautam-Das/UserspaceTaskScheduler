@@ -9,6 +9,8 @@
 
 constexpr size_t N_TASKS = 16;
 
+extern thread_local class Worker *local_worker;
+
 extern "C" {
 void swap_context_stack(TCB *cur_c, TCB *new_c);
 }
@@ -30,6 +32,7 @@ public:
         return queue.push(std::move(task));
     }
     void run() {
+        local_worker = this;
         while (queue.try_pop(current_tcb)) {
             if (current_tcb.get_state() == TCB::State::DONE)
                 continue;
@@ -52,7 +55,5 @@ public:
         swap_context_stack(&tcb, &worker_context);
     }
 };
-
-extern thread_local Worker *local_worker;
 
 #endif

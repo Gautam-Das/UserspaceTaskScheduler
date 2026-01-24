@@ -13,6 +13,7 @@ struct TCB {
     };
 
     void *rsp;
+    char *stack;
     uint32_t state : 2;
     uint32_t priority : 4;
     uint32_t small_stack : 1;

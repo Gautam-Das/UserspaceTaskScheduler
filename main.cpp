@@ -1,3 +1,4 @@
+#include "Scheduler.hpp"
 #include "TCB.hpp"
 #include "Worker.hpp"
 #include <cstdint>
@@ -21,13 +22,19 @@ void yield() {
     }
 }
 
+void finish() {
+    if (local_worker) {
+        local_worker->finish(local_worker->current_tcb);
+    }
+}
+
 void foo() {
     std::cout << "hello world from foo\n"
               << std::endl;
     yield();
     printf("second scary hello world from foo\n");
     // exit(0);
-    yield();
+    finish();
 }
 
 void bar() {
@@ -81,18 +88,11 @@ int main(void) {
     c.set_all(TCB::State::READY, 1, false, 0);
 
     worker.add_task(c);
-
-    char data2[4096];
-    auto sp2 = setup_stack(data2, 4096, reinterpret_cast<uint64_t>(bar));
-
-    TCB d;
-
-    d.rsp = reinterpret_cast<void *>(sp2);
-    d.set_all(TCB::State::READY, 1, false, 0);
-
-    worker.add_task(d);
-
     local_worker = &worker;
     worker.run();
+
+    Scheduler<1> scheduler;
+    scheduler.run_task(bar);
+
     return 0;
 }

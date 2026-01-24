@@ -19,6 +19,10 @@ private:
     task_queue<TCB, N_TASKS> queue;
     TCB worker_context;
 
+    void handle_tcb_delete() {
+        delete[] current_tcb.stack; // Free stack
+    }
+
 public:
     TCB current_tcb;
 
@@ -27,18 +31,24 @@ public:
     }
     void run() {
         while (queue.try_pop(current_tcb)) {
-            // std::cout << "when popping" << std::endl;
-            // current_tcb.print_context();
-
+            if (current_tcb.get_state() == TCB::State::DONE)
+                continue;
             auto sp = current_tcb.rsp;
             swap_context_stack(&worker_context, &current_tcb);
-            // printf("returning from yield\n");
+            if (current_tcb.get_state() == TCB::State::DONE) {
+                handle_tcb_delete();
+                continue;
+            }
             add_task(current_tcb);
-            // printf("added task back in\n");
         }
     }
     void yield(TCB& tcb) {
         tcb.set_state(TCB::State::WAITING);
+        swap_context_stack(&tcb, &worker_context);
+    }
+
+    void finish(TCB& tcb) {
+        tcb.set_state(TCB::State::DONE);
         swap_context_stack(&tcb, &worker_context);
     }
 };

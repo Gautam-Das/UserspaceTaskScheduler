@@ -2,6 +2,7 @@
 #define TCB_H
 
 #include <cstdint>
+#include <iostream>
 
 struct TCB {
     enum class State {
@@ -37,8 +38,10 @@ struct TCB {
         this->small_stack = small_stack;
     }
 
-    constexpr auto get_state() const { return this->state; }
+    constexpr auto get_state() const { return static_cast<State>(this->state); }
     constexpr auto get_priority() const { return this->priority; }
+
+    constexpr void print_context() const { printf("rsp: %p, state: %d, priority: %d, small_stack: %d, task_id: %d\n", rsp, state, priority, small_stack, task_id); }
 };
 
 #endif

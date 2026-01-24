@@ -1,13 +1,14 @@
-#ifndef TASK_QUEUE.H
-#define TASK_QUEUE .H
+#ifndef TASK_QUEUE_H
+#define TASK_QUEUE_H
 
 #include <array>
+#include <atomic>
 #include <memory>
 #include <mutex>
 
 template <typename T, size_t size>
 class task_queue {
-    static_assert((Size & (Size - 1)) == 0, "size must be a power of two");
+    static_assert((size & (size - 1)) == 0, "size must be a power of two");
 
 private:
     // using T rather than shared pointer because in Linked list queue, the
@@ -24,8 +25,7 @@ private:
     static constexpr size_t mask = size - 1;
 
 public:
-    constexpr size_t get_size() const { return cur_size; }
-    task_queue() : head(&tasks), tail(&tasks), cur_size(0) {};
+    task_queue() {};
     task_queue(const task_queue& other) = delete;
     auto operator=(const task_queue& other) = delete;
 

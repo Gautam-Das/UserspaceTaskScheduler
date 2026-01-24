@@ -26,5 +26,14 @@ stress_test:
 	g++ stress_test.o get_context.o set_context.o swap_context.o swap_context_stack.o -o stress_test
 	./stress_test
 
+bench:
+	as get_context.s -o get_context.o
+	as set_context.s -o set_context.o
+	as swap_context.s -o swap_context.o
+	as swap_context_stack.s -o swap_context_stack.o
+	g++ -c bench.cpp -o bench.o -std=c++20
+	g++ bench.o get_context.o set_context.o swap_context.o swap_context_stack.o -o bench
+	./bench
+
 clean:
-	rm set_context.o get_context.o try_swap.o swap_context_stack.o swap_context.o main.o main stress_test stress_test.o
+	rm set_context.o get_context.o try_swap.o swap_context_stack.o swap_context.o main.o main stress_test stress_test.o bench bench.o

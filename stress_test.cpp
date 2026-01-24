@@ -9,10 +9,6 @@
 #include <thread>
 #include <vector>
 
-extern "C" {
-void swap_context_stack(TCB *cur_c, TCB *new_c);
-}
-
 TCB main_context;
 Worker worker;
 

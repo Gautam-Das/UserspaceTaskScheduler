@@ -60,7 +60,7 @@ public:
         for (auto i{0}; i < n_workers; ++i) {
             worker_threads[i] = std::thread(&Worker::run, &workers[i]);
         }
-        std::cout << "Threads created successfully" << std::endl;
+        // std::cout << "Threads created successfully" << std::endl;
     }
 
     void run_task(void (*function)()) {
@@ -73,10 +73,10 @@ public:
         task_tcb.rsp = reinterpret_cast<void *>(sp);
         task_tcb.stack = data;
         task_tcb.set_all(TCB::State::READY, 1, false, 0);
-        std::cout << "CREATED task successfully" << std::endl;
+        // std::cout << "CREATED task successfully" << std::endl;
 
         worker.add_task(task_tcb);
-        std::cout << "added task successfully" << std::endl;
+        // std::cout << "added task successfully" << std::endl;
         return;
     }
 

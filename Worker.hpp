@@ -6,7 +6,7 @@
 #include <array>
 #include <atomic>
 #include <iostream>
-
+#include <thread>
 constexpr size_t N_TASKS = 16;
 
 extern thread_local class Worker *local_worker;
@@ -17,7 +17,6 @@ void swap_context_stack(TCB *cur_c, TCB *new_c);
 
 class Worker {
 private:
-    std::atomic<bool> is_active;
     task_queue<TCB, N_TASKS> queue;
     TCB worker_context;
 
@@ -27,13 +26,20 @@ private:
 
 public:
     TCB current_tcb;
+    std::atomic<bool> is_active = true;
 
     bool add_task(TCB task) {
         return queue.push(std::move(task));
     }
     void run() {
         local_worker = this;
-        while (queue.try_pop(current_tcb)) {
+        while (is_active.load()) {
+            auto has_task = queue.try_pop(current_tcb);
+            if (!has_task) {
+                // std::cout << "worker has no tasks, chillin" << std::endl;
+                std::this_thread::yield();
+                continue;
+            }
             if (current_tcb.get_state() == TCB::State::DONE)
                 continue;
             auto sp = current_tcb.rsp;

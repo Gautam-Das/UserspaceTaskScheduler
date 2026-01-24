@@ -88,10 +88,11 @@ int main(void) {
     c.set_all(TCB::State::READY, 1, false, 0);
 
     worker.add_task(c);
-    worker.run();
-
+    auto t1 = std::thread(&Worker::run, &worker);
+    t1.detach();
     Scheduler<1> scheduler;
     scheduler.run_task(bar);
 
+    std::cout << "main ends here" << std::endl;
     return 0;
 }

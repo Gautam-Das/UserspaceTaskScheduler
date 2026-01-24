@@ -7,6 +7,7 @@
 #include <functional>
 #include <iostream>
 #include <thread>
+#include <vector>
 
 template <size_t n_workers>
 class Scheduler {
@@ -14,6 +15,7 @@ class Scheduler {
 
 private:
     Worker workers[n_workers];
+    std::vector<std::thread> worker_threads;
     size_t cur_worker{0};
 
     auto add_dummy_registers(char *sp, size_t n_regs) {
@@ -53,19 +55,41 @@ private:
     }
 
 public:
+    Scheduler() {
+        worker_threads.resize(n_workers);
+        for (auto i{0}; i < n_workers; ++i) {
+            worker_threads[i] = std::thread(&Worker::run, &workers[i]);
+        }
+        std::cout << "Threads created successfully" << std::endl;
+    }
+
     void run_task(void (*function)()) {
         auto& worker = workers[get_next_worker()];
-        char *data = new char[4096];
-        auto sp = setup_stack(data, 4096, reinterpret_cast<uint64_t>(function));
+        char *data = new char[16384];
+        auto sp = setup_stack(data, 16384, reinterpret_cast<uint64_t>(function));
 
         TCB task_tcb;
 
         task_tcb.rsp = reinterpret_cast<void *>(sp);
         task_tcb.stack = data;
         task_tcb.set_all(TCB::State::READY, 1, false, 0);
+        std::cout << "CREATED task successfully" << std::endl;
 
         worker.add_task(task_tcb);
-        worker.run();
+        std::cout << "added task successfully" << std::endl;
+        return;
+    }
+
+    ~Scheduler() {
+        std::cout << "destroying " << std::endl;
+        // signal workers to stop here
+        for (size_t i = 0; i < n_workers; ++i) {
+            workers[i].is_active = false;
+        }
+        for (auto& t : worker_threads) {
+            if (t.joinable())
+                t.join();
+        }
     }
 };
 

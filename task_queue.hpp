@@ -35,7 +35,12 @@ public:
         if (cur_head == cur_tail)
             return false;
 
-        out = std::move(tasks[cur_head & (size - 1)]);
+        // 1. Grab the pointer
+        out = tasks[cur_head & mask];
+
+        // 2. Clear the slot (Optional but recommended for pointers)
+        tasks[cur_head & mask] = nullptr;
+
         head.store(cur_head + 1, std::memory_order_release);
         return true;
     }

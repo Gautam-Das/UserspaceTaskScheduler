@@ -65,19 +65,23 @@ public:
 
     void run_task(void (*function)()) {
         auto& worker = workers[get_next_worker()];
+
+        // Allocate TCB and Stack on the heap
+        TCB *task_tcb = new TCB();
         char *data = new char[16384];
+
         auto sp = setup_stack(data, 16384, reinterpret_cast<uint64_t>(function));
 
-        TCB task_tcb;
+        task_tcb->rsp = reinterpret_cast<void *>(sp);
+        task_tcb->stack = data;
+        task_tcb->set_all(TCB::State::READY, 1, false, 0);
 
-        task_tcb.rsp = reinterpret_cast<void *>(sp);
-        task_tcb.stack = data;
-        task_tcb.set_all(TCB::State::READY, 1, false, 0);
-        // std::cout << "CREATED task successfully" << std::endl;
-
-        worker.add_task(task_tcb);
-        // std::cout << "added task successfully" << std::endl;
-        return;
+        // Push the pointer to the worker
+        if (!worker.add_task(task_tcb)) {
+            // Safety: if queue is full, cleanup immediately to avoid leaks
+            delete[] data;
+            delete task_tcb;
+        }
     }
 
     ~Scheduler() {

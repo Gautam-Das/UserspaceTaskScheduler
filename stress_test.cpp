@@ -15,17 +15,16 @@ Worker worker;
 thread_local Worker *local_worker = nullptr;
 
 void yield() {
-    if (local_worker) {
-        local_worker->yield(local_worker->current_tcb); // Passing the pointer
+    if (local_worker && local_worker->current_tcb) {
+        local_worker->yield(local_worker->current_tcb);
     }
 }
 
 void finish() {
-    if (local_worker) {
+    if (local_worker && local_worker->current_tcb) {
         local_worker->finish(local_worker->current_tcb);
     }
 }
-
 // Helper to differentiate which thread/task is talking
 #define TASK_LOG(name, id, msg) \
     printf("[Task %s #%d] %s\n", name, id, msg)

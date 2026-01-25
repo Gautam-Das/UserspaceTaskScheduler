@@ -84,7 +84,7 @@ public:
         std::cout << "destroying " << std::endl;
         // signal workers to stop here
         for (size_t i = 0; i < n_workers; ++i) {
-            workers[i].is_active = false;
+            workers[i].is_active.store(false, std::memory_order_relaxed);
         }
         for (auto& t : worker_threads) {
             if (t.joinable())

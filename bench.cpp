@@ -18,7 +18,8 @@ void finish() {
     }
 }
 
-// We'll use a global atomic counter to track when tasks are actually done
+// Global shared resource to simulate contention
+std::atomic<int> hardware_bus_busy{0};
 std::atomic<int> tasks_remaining{0};
 
 void benchmark_finish() {
@@ -28,11 +29,33 @@ void benchmark_finish() {
     }
 }
 
-// Slightly modified tasks to use the atomic counter
+void io_sim_task_bench() {
+    for (int req = 0; req < 5; ++req) {
+        // Step 1: Simulate data preparation (Math)
+        volatile int dummy = 0;
+        for (int i = 0; i < 50000; ++i)
+            dummy += i;
+
+        // Step 2: Acquire "Bus" or yield
+        while (hardware_bus_busy.exchange(1) == 1) {
+            yield();
+        }
+
+        // Step 3: Simulate Transfer Latency
+        for (int latency = 0; latency < 50; ++latency) {
+            yield();
+        }
+
+        hardware_bus_busy.store(0);
+    }
+    benchmark_finish();
+}
+
 void prime_task_bench() {
     int count = 0;
     int num = 2;
-    while (count < 5000) { // Increased from 50 to 5000
+    // Massive increase in work to drown out OS overhead
+    while (count < 20000) {
         bool is_prime = true;
         for (int i = 2; i <= num / 2; ++i) {
             if (num % i == 0) {
@@ -42,29 +65,17 @@ void prime_task_bench() {
         }
         if (is_prime) {
             count++;
-            if (count % 500 == 0)
-                yield(); // Yield less often
+            if (count % 1000 == 0)
+                yield();
         }
         num++;
     }
     benchmark_finish();
 }
 
-void fib_task_bench() {
-    long long a = 0, b = 1;
-    for (int i = 0; i < 5000; ++i) {
-        long long next = a + b;
-        a = b;
-        b = next;
-        if (i % 500 == 0)
-            yield();
-    }
-    benchmark_finish();
-}
-
 int main() {
     const int num_repeats = 16;
-    const int total_tasks = num_repeats * 4;
+    const int total_tasks = num_repeats * 2;
 
     // --- SEQUENTIAL TEST ---
     std::cout << "Starting Sequential Baseline..." << std::endl;
@@ -77,9 +88,7 @@ int main() {
         // We override 'yield' and 'finish' conceptually by just letting them run
         // For this test, we just run the logic blocks
         prime_task_bench();
-        prime_task_bench();
-        fib_task_bench();
-        fib_task_bench();
+        io_sim_task_bench();
     }
 
     auto end_seq = std::chrono::high_resolution_clock::now();
@@ -98,16 +107,13 @@ int main() {
     {
         for (int i = 0; i < num_repeats; ++i) {
             scheduler.run_task(prime_task_bench);
-            scheduler.run_task(prime_task_bench);
-            scheduler.run_task(fib_task_bench);
-            scheduler.run_task(fib_task_bench);
+            scheduler.run_task(io_sim_task_bench);
         }
 
         // Wait loop: Poll the atomic counter until it hits zero
         while (tasks_remaining.load() > 0) {
             std::this_thread::yield();
         }
-        // Scheduler destructor called here (joins threads)
     }
 
     auto end_sched = std::chrono::high_resolution_clock::now();

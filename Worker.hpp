@@ -33,7 +33,7 @@ public:
     }
     void run() {
         local_worker = this;
-        while (is_active.load()) {
+        while (is_active.load(std::memory_order_relaxed)) {
             auto has_task = queue.try_pop(current_tcb);
             if (!has_task) {
                 // std::cout << "worker has no tasks, chillin" << std::endl;

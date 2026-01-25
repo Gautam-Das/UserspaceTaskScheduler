@@ -18,8 +18,8 @@ private:
     // moving out and moving back in is probably faster due to the small size
     // no need for ownership
     std::array<T, size> tasks;
-    std::atomic<size_t> head{0};
-    std::atomic<size_t> tail{0};
+    alignas(64) std::atomic<size_t> head{0};
+    alignas(64) std::atomic<size_t> tail{0};
     std::mutex push_mutex;
 
     static constexpr size_t mask = size - 1;
@@ -30,27 +30,27 @@ public:
     auto operator=(const task_queue& other) = delete;
 
     auto try_pop(T& out) {
-        auto cur_head = head.load();
-        auto cur_tail = tail.load();
+        auto cur_head = head.load(std::memory_order_relaxed);
+        auto cur_tail = tail.load(std::memory_order_acquire);
         if (cur_head == cur_tail)
             return false;
 
-        out = std::move(tasks[head & (size - 1)]);
-        head++;
+        out = std::move(tasks[cur_head & (size - 1)]);
+        head.store(cur_head + 1, std::memory_order_release);
         return true;
     }
 
     auto push(T new_value) {
         std::lock_guard guard(push_mutex);
 
-        auto h = head.load();
-        auto t = tail.load();
+        auto h = head.load(std::memory_order_acquire);
+        auto t = tail.load(std::memory_order_relaxed);
         if (t - h >= size) {
             return false;
         }
 
         tasks[t & mask] = std::move(new_value);
-        tail++;
+        tail.store(t + 1, std::memory_order_release);
         return true;
     }
 };

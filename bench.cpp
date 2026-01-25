@@ -107,6 +107,8 @@ int main() {
     {
         for (int i = 0; i < num_repeats; ++i) {
             scheduler.run_task(prime_task_bench);
+        }
+        for (int i = 0; i < num_repeats; ++i) {
             scheduler.run_task(io_sim_task_bench);
         }
 

@@ -36,4 +36,4 @@ bench:
 	./bench
 
 clean:
-	rm set_context.o get_context.o try_swap.o swap_context_stack.o swap_context.o main.o main stress_test stress_test.o bench bench.o
+	rm set_context.o get_context.o try_swap.o swap_context_stack.o swap_context.o main.o main stress_test stress_test.o bench bench.o try_swap a.exe

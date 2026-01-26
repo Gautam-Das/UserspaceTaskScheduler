@@ -41,11 +41,6 @@ void io_sim_task_bench() {
             yield();
         }
 
-        // Step 3: Simulate Transfer Latency
-        for (int latency = 0; latency < 50; ++latency) {
-            yield();
-        }
-
         hardware_bus_busy.store(0);
     }
     benchmark_finish();
@@ -65,7 +60,7 @@ void prime_task_bench() {
         }
         if (is_prime) {
             count++;
-            if (count % 1000 == 0)
+            if (count % 10000 == 0)
                 yield();
         }
         num++;

@@ -3,6 +3,7 @@
 
 #include "TCB.hpp"
 #include "Worker.hpp"
+#include "task_queue.hpp"
 #include <bit>
 #include <functional>
 #include <iostream>
@@ -11,11 +12,13 @@
 
 template <size_t n_workers>
 class Scheduler {
+    using queue = task_queue<TCB *, N_TASKS>;
     static_assert(std::popcount(n_workers) == 1, "n_workers must be power of 2");
 
 private:
     Worker workers[n_workers];
     std::vector<std::thread> worker_threads;
+    queue worker_queues[n_workers];
     size_t cur_worker{0};
 
     auto add_dummy_registers(char *sp, size_t n_regs) {
@@ -58,6 +61,7 @@ public:
     Scheduler() {
         worker_threads.resize(n_workers);
         for (auto i{0}; i < n_workers; ++i) {
+            workers[i].set_queue_ptr(&(worker_queues[i]));
             worker_threads[i] = std::thread(&Worker::run, &workers[i]);
         }
         // std::cout << "Threads created successfully" << std::endl;

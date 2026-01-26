@@ -22,8 +22,8 @@ stress_test:
 	as set_context.s -o set_context.o
 	as swap_context.s -o swap_context.o
 	as swap_context_stack.s -o swap_context_stack.o
-	g++ -c stress_test.cpp -o stress_test.o -std=c++20
-	g++ stress_test.o get_context.o set_context.o swap_context.o swap_context_stack.o -o stress_test
+	g++ -c stress_test.cpp -o stress_test.o -std=c++20 -g -O3 -fno-omit-frame-pointer
+	g++ stress_test.o get_context.o set_context.o swap_context.o swap_context_stack.o -o stress_test -g -O3 -fno-omit-frame-pointer
 	./stress_test
 
 bench:

@@ -18,8 +18,8 @@ private:
     // moving out and moving back in is probably faster due to the small size
     // no need for ownership
     std::array<T, size> tasks;
-    alignas(64) std::atomic<size_t> head{0};
-    alignas(64) std::atomic<size_t> tail{0};
+    alignas(256) std::atomic<size_t> head{0};
+    alignas(256) std::atomic<size_t> tail{0};
     std::mutex push_mutex;
 
     static constexpr size_t mask = size - 1;

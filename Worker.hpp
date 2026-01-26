@@ -16,7 +16,8 @@ void swap_context_stack(TCB *cur_c, TCB *new_c);
 
 class Worker {
 private:
-    task_queue<TCB *, N_TASKS> queue; // Now stores pointers
+    using queue = task_queue<TCB *, N_TASKS>;
+    queue *my_queue; // Now stores pointers
     TCB worker_context;
 
     void handle_tcb_delete(TCB *tcb) {
@@ -30,15 +31,19 @@ public:
     TCB *current_tcb = nullptr; // Pointer to active task
     std::atomic<bool> is_active{true};
 
+    void set_queue_ptr(queue *my_queue) {
+        this->my_queue = my_queue;
+    }
+
     bool add_task(TCB *task) {
-        return queue.push(task);
+        return my_queue->push(task);
     }
 
     void run() {
         local_worker = this;
         while (is_active.load(std::memory_order_relaxed)) {
             TCB *next_task = nullptr;
-            if (!queue.try_pop(next_task)) {
+            if (!my_queue->try_pop(next_task)) {
                 std::this_thread::yield();
                 continue;
             }

@@ -2,6 +2,7 @@
 #include <atomic>
 #include <chrono>
 #include <iostream>
+#include <random>
 #include <vector>
 
 thread_local Worker *local_worker = nullptr;
@@ -30,19 +31,19 @@ void benchmark_finish() {
 }
 
 void io_sim_task_bench() {
-    for (int req = 0; req < 5; ++req) {
-        // Step 1: Simulate data preparation (Math)
-        volatile int dummy = 0;
-        for (int i = 0; i < 50000; ++i)
-            dummy += i;
+    std::mt19937_64 rng(reinterpret_cast<uintptr_t>(&rng));
+    std::uniform_real_distribution<double> dist(0.0, 1.0);
 
-        // Step 2: Acquire "Bus" or yield
-        while (hardware_bus_busy.exchange(1) == 1) {
-            yield();
-        }
+    constexpr int N = 50'000;
+    int inside = 0;
 
-        hardware_bus_busy.store(0);
+    for (int i = 0; i < N; ++i) {
+        double x = dist(rng);
+        double y = dist(rng);
+        if (x * x + y * y <= 1.0)
+            inside++;
     }
+
     benchmark_finish();
 }
 
@@ -100,9 +101,9 @@ int main() {
     auto start_sched = std::chrono::high_resolution_clock::now();
 
     {
-        for (int i = 0; i < num_repeats; ++i) {
-            scheduler.run_task(prime_task_bench);
-        }
+        // for (int i = 0; i < num_repeats; ++i) {
+        //     scheduler.run_task(prime_task_bench);
+        // }
         for (int i = 0; i < num_repeats; ++i) {
             scheduler.run_task(io_sim_task_bench);
         }

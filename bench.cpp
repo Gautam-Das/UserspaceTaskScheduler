@@ -34,7 +34,7 @@ void io_sim_task_bench() {
     std::mt19937_64 rng(reinterpret_cast<uintptr_t>(&rng));
     std::uniform_real_distribution<double> dist(0.0, 1.0);
 
-    constexpr int N = 50'000;
+    constexpr int N = 50'000'000;
     int inside = 0;
 
     for (int i = 0; i < N; ++i) {
@@ -71,7 +71,7 @@ void prime_task_bench() {
 
 int main() {
     const int num_repeats = 16;
-    const int total_tasks = num_repeats * 2;
+    const int total_tasks = num_repeats * 1;
 
     // --- SEQUENTIAL TEST ---
     std::cout << "Starting Sequential Baseline..." << std::endl;
@@ -83,7 +83,7 @@ int main() {
         // We call them directly (no scheduler, no threads)
         // We override 'yield' and 'finish' conceptually by just letting them run
         // For this test, we just run the logic blocks
-        prime_task_bench();
+        // prime_task_bench();
         io_sim_task_bench();
     }
 
